@@ -1,31 +1,67 @@
 import socket
+import os
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-method = input("Enter the Method: ")
-address = input("Enter the address: ")
 
-firstSlash = len(address) if (address.find("/") == -1) else address.find("/")
-firstColon = firstSlash if (address.find(":") == -1) else address.find(":")
+methods = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
 
-host = address[:firstColon]
-port = "80" if(firstColon ==  firstSlash) else address[firstColon + 1:firstSlash]
-URI = "/" if(firstSlash == len(address)) else address[firstSlash:] 
+def start():
+    while True:
+        os.system("cls")
+        print("Pick a method: ")
 
-print("host:", host, " port:", port, " URI:", URI)
+        i = 1
+        for method in methods:
+            print(i, "-", method)
+            i+=1    
+            
+        option = int(input("Enter the Method: "))
+        
+        if option < 1 or option > 8:
+            print(f"Not a valid option: {option}")
+            input("Enter to continue")
+            continue
+        
+        method = methods[option]
 
-sock.connect((host, int(port)))
+        address = input("Enter the address: ")
 
-# while True:
-#         message = sock.recv(1024).decode()
-#         print("Server:", message)
+        #address parsing
+        firstSlash = len(address) if (address.find("/") == -1) else address.find("/")
+        firstColon = firstSlash if (address.find(":") == -1) else address.find(":")
 
-message = f"{method} {URI} HTTP/1.1\r\nHost: {host} \r\n\r\n"
-print(sock.send(message.encode(errors="strict")))
-print(sock.recv(4096).decode())
-sock.close()
+        host = address[:firstColon]
+        port = "80" if(firstColon ==  firstSlash) else address[firstColon + 1:firstSlash]
+        URI = "/" if(firstSlash == len(address)) else address[firstSlash:] 
 
-# Sun, 06 Nov 1994 08:49:37 GMT debo devolver esta fecha
-# pero debo aceptar tambien
-# Sunday, 06-Nov-94 08:49:37 GMT
-# Sun Nov  6 08:49:37 1994
+        print("host:", host, " port:", port, " URI:", URI)
+
+        try:
+            sock.connect((host, int(port)))
+        except:
+            print("\n\nCould not connect to server :-(.\nPlease verify the URL and the internet.\nThen connection and try again.")
+            
+            input("Enter to continue")
+            continue
+        
+        request = f"{method} {URI} HTTP/1.1\r\nHost: {host + ":" + port} \r\n\r\n "
+        print(sock.send(request.encode(errors="strict")))
+        
+        # response = b''
+        # while True:
+        #     buf = sock.recv(4096) 
+        #     if not buf:
+        #         break
+        #     response += buf
+            
+        print(sock.recv(4096).decode())
+        sock.close()
+
+        input("Enter to continue")
+        # Sun, 06 Nov 1994 08:49:37 GMT debo devolver esta fecha
+        # pero debo aceptar tambien
+        # Sunday, 06-Nov-94 08:49:37 GMT
+        # Sun Nov  6 08:49:37 1994
+        
+start()
