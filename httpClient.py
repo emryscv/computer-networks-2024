@@ -1,13 +1,15 @@
 import socket
 import os
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-
 methods = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
+
+generalHeaders = ["Cache-Control", "Connection", "Date", "Pragma", "Trailer", "Transfer-Enconding", "Upgrade", "Via", "Warning"]
+requestHeaders = ["Accept","Accept-Charset","Accept-Encoding","Accept-Language", "Authorization", "Expect", "From", "Host", "If-Match", "If-Modified-Since", "If-None-Match", "If-Range", "If-Unmodified-Since", "Max-Forwards", "Proxy-Authorization","Range", "Referer", "TE", "User-Agent" ]
+entityHeaders = ["Allow", "Content-Encoding", "Content-Language","Content-Length", "Content-Location", "Content-MD5", "Content-Range", "Content-Type", "Expires", "Last-Modified"]
 
 def start():
     while True:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         os.system("cls")
         print("Pick a method: ")
 
@@ -37,15 +39,15 @@ def start():
 
         print("host:", host, " port:", port, " URI:", URI)
 
-        try:
-            sock.connect((host, int(port)))
-        except:
-            print("\n\nCould not connect to server :-(.\nPlease verify the URL and the internet.\nThen connection and try again.")
+#        try:
+        sock.connect((host, int(port)))
+#        except:
+#            print("\n\nCould not connect to server :-(.\nPlease verify the URL and the internet.\nThen connection and try again.")
             
-            input("Enter to continue")
-            continue
+#            input("Enter to continue")
+#            continue
         
-        request = f"{method} {URI} HTTP/1.1\r\nHost: {host + ":" + port} \r\n\r\n "
+        request = f"{method} {URI} HTTP/1.1\r\nHost: {host + ":" + port}\r\nConnection: close\r\n"
         print(sock.send(request.encode(errors="strict")))
         
         # response = b''
