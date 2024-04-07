@@ -20,16 +20,12 @@ sock.connect((host, int(port)))
 #         message = sock.recv(1024).decode()
 #         print("Server:", message)
 
-sock.send(message = f"{method} {URI} HTTP/1.1 Host: {host}")
+message = f"{method} {URI} HTTP/1.1\r\nHost: {host} \r\n\r\n"
+print(sock.send(message.encode(errors="strict")))
+print(sock.recv(4096).decode())
 sock.close()
-
-
 
 # Sun, 06 Nov 1994 08:49:37 GMT debo devolver esta fecha
 # pero debo aceptar tambien
 # Sunday, 06-Nov-94 08:49:37 GMT
 # Sun Nov  6 08:49:37 1994
-# 
-#
-#
-#
