@@ -1,5 +1,5 @@
 import socket
-import os
+from bs4 import BeautifulSoup as bs
 import re
 
 methods = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
@@ -119,16 +119,16 @@ def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
 def parseResponse(response):
     endOfStatus = response.find("\r\n")
     endOfHeaders = response.find("\r\n\r\n")
+    
     status = response[9:endOfStatus]
+    
     rawHeaders = response[endOfStatus+2:endOfHeaders]
-    body = response[endOfHeaders+4: ]
-    
     rawHeaders = rawHeaders.split("\r\n")
-    
     headers = [rawHeader.split(":") for rawHeader in rawHeaders]
     
-    print("[Response] status:",status)
-    #print("body:", body)
+    body = response[endOfHeaders+4: ]
+    body = bs(body).prettify()
     
+    print("[Response] status:",status)
+
     return status, headers, body
-parseURL("http://www.google.com:80/adwd/ad/awd/aw")

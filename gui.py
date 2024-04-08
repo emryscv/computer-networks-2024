@@ -17,7 +17,7 @@ responseHeaders = [["Key", "Value"]]
 statusCode.set("Status: none")
 
 #Handlers
-def sendBtnHandler(headersResTable):
+def sendBtnHandler():
     global responseHeaders
     
     status, headers, body = httpClient.request(methodMenu.get(), URL.get(), [], "")
@@ -30,11 +30,15 @@ def sendBtnHandler(headersResTable):
     for header in responseHeaders:
         headersResTable.add_row(header, headersResTable.rows)
 
+    print(body)
+
+    bodyResFrame.delete(0.0, 'end')
+    bodyResFrame.insert(0.0, body)
 
 #request section
 methodMenu = CTkComboBox(window, values=httpClient.methods)
 URL = CTkEntry(window, placeholder_text="URL", width=630, font=("",11))
-sendBtn = CTkButton(window, width=100, font=("",11), text="Send", command=lambda: sendBtnHandler(headersResTable))
+sendBtn = CTkButton(window, width=100, font=("",11), text="Send", command=sendBtnHandler)
 
 requestDataFields = CTkTabview(window, width=870, height=200, anchor="nw")
 
@@ -65,7 +69,7 @@ bodyResTab = responseDataFields.add("Body")
 cookiesResTab = responseDataFields.add("Cookies")
 
 headersResFrame = CTkScrollableFrame(headersResTab, width=830, height=200)
-bodyResFrame = CTkScrollableFrame(bodyResTab, width=830, height=200)
+bodyResFrame = CTkTextbox(bodyResTab, width=850, height=210)
 cookiesResFrame = CTkScrollableFrame(cookiesResTab, width=830, height=200)
 
 headersResTable = CTkTable(headersResFrame, column=2, values=responseHeaders)
