@@ -70,6 +70,7 @@ def start():
 def request(method, URL, headers, body):
     host, port, URI = parseURL(URL)
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host, int(port)))
     
     request = f"{method} {URI} HTTP/1.1\r\nHost: {host + ":" + port}\r\n"
     
@@ -78,6 +79,7 @@ def request(method, URL, headers, body):
     
     if len(headers) == 0:
         request += "\r\n"    
+    print(f"[Request] {request}")
     
     print(sock.send(request.encode(errors="strict")))
     

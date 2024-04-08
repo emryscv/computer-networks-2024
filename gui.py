@@ -3,8 +3,11 @@ from customtkinter import *
 from CTkTable import CTkTable
 import httpClient
 
-methods =[ "a", "v"]
+#Handlers
+def sendBtnHandler():
+    httpClient.request(methodMenu.get(), URL.get(), [], "")
 
+#CTk configs
 window = CTk()
 
 window.geometry("900x630")
@@ -12,15 +15,13 @@ window.resizable(False, False)
 window.config(padx=20, pady=20)
 window.title("HTTP client")
 
-selectedMethod = StringVar()
 statusCode = StringVar()
-selectedMethod.set(httpClient.methods[0])
 statusCode.set("Status code: 200")
 
 #request section
 methodMenu = CTkComboBox(window, values=httpClient.methods)
 URL = CTkEntry(window, placeholder_text="URL", width=630, font=("",11))
-sendBtn = CTkButton(window, width=100, font=("",11), text="Send")
+sendBtn = CTkButton(window, width=100, font=("",11), text="Send", command=sendBtnHandler)
 
 requestDataFields = CTkTabview(window, width=870, height=200, anchor="nw")
 
