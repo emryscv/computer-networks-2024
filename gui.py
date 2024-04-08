@@ -2,11 +2,7 @@
 from customtkinter import *
 from CTkTable import CTkTable
 import httpClient
-
-#Handlers
-def sendBtnHandler():
-    httpClient.request(methodMenu.get(), URL.get(), [], "")
-
+    
 #CTk configs
 window = CTk()
 
@@ -16,12 +12,29 @@ window.config(padx=20, pady=20)
 window.title("HTTP client")
 
 statusCode = StringVar()
+responseHeaders = [["Key", "Value"]]
+
 statusCode.set("Status: none")
+
+#Handlers
+def sendBtnHandler(headersResTable):
+    global responseHeaders
+    
+    status, headers, body = httpClient.request(methodMenu.get(), URL.get(), [], "")
+    responseHeaders = [["Key", "Value"]] + headers
+    
+    statusCode.set("Status: " + status)
+    
+    headersResTable.delete_rows([i for i in range(0,headersResTable.rows)])
+    
+    for header in responseHeaders:
+        headersResTable.add_row(header, headersResTable.rows)
+
 
 #request section
 methodMenu = CTkComboBox(window, values=httpClient.methods)
 URL = CTkEntry(window, placeholder_text="URL", width=630, font=("",11))
-sendBtn = CTkButton(window, width=100, font=("",11), text="Send", command=sendBtnHandler)
+sendBtn = CTkButton(window, width=100, font=("",11), text="Send", command=lambda: sendBtnHandler(headersResTable))
 
 requestDataFields = CTkTabview(window, width=870, height=200, anchor="nw")
 
@@ -29,7 +42,7 @@ headersReqTab = requestDataFields.add("Headers")
 bodyReqTab = requestDataFields.add("Body")
 headersReqFrame = CTkScrollableFrame(headersReqTab, width=830, height=190)
 bodyReqFrame = CTkTextbox(bodyReqTab, width=850, height=210)
-headersReqTable = CTkTable(headersReqFrame, column=2, row=1, values=[["Key", "Value"],[2,2],[3,3]])
+headersReqTable = CTkTable(headersReqFrame, column=2, values=[["Key", "Value"]])
 
 methodMenu.grid(row=0, column=0)
 URL.grid(row=0, column=1)
@@ -43,7 +56,7 @@ headersReqTable.pack(fill="both", expand=True)
 #response section
 
 responseLabel = CTkLabel(window, text="Response", anchor="w")
-statusCodeLabel = CTkLabel(window, text=statusCode.get())
+statusCodeLabel = CTkLabel(window, textvariable=statusCode)
 
 responseDataFields = CTkTabview(window, width=870, height=200, anchor="nw")
 
@@ -55,8 +68,8 @@ headersResFrame = CTkScrollableFrame(headersResTab, width=830, height=200)
 bodyResFrame = CTkScrollableFrame(bodyResTab, width=830, height=200)
 cookiesResFrame = CTkScrollableFrame(cookiesResTab, width=830, height=200)
 
-headersResTable = CTkTable(headersResFrame, column=2, row=10, values=[["Key", "Value"],[2,2],[3,3]])
-cookiesResTable = CTkTable(cookiesResFrame, column=7, row=10, values=[["Name", "Value", "Domain", "Path", "Expires", "HttpOnly", "Secure"],[2,2],[3,3]])
+headersResTable = CTkTable(headersResFrame, column=2, values=responseHeaders)
+cookiesResTable = CTkTable(cookiesResFrame, column=7, values=[["Name", "Value", "Domain", "Path", "Expires", "HttpOnly", "Secure"]])
 
 responseLabel.grid(row=2, column=0)
 statusCodeLabel.grid(row=2, column=1, columnspan=2)
@@ -71,3 +84,4 @@ headersResTable.pack(fill="both", expand=True)
 cookiesResTable.pack(fill="both", expand=True)
 
 window.mainloop()
+

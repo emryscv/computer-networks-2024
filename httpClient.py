@@ -91,7 +91,7 @@ def request(method, URL, headers, body):
         bytesSend += sock.send(request[bytesSend:].encode(errors="strict"))
     
     response = sock.recv(8192)
-    #print(response)
+    #print(response.decode())
     
     sock.close()
     return parseResponse(response.decode())
