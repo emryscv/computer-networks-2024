@@ -5,21 +5,6 @@ import httpClient
 
 methods =[ "a", "v"]
 
-def vwcon(percentage):
-    print(int(percentage * vw / 100))
-    return int(percentage * vw / 100)
-    
-def on_focus_in(entry):
-    if entry.cget('state') == 'disabled':
-        entry.configure(state='normal')
-        entry.delete(0, 'end')
-
-
-def on_focus_out(entry, placeholder):
-    if entry.get() == "":
-        entry.insert(0, placeholder)
-        entry.configure(state='disabled')
-          
 window = CTk()
 
 window.geometry("900x630")
