@@ -68,7 +68,8 @@ def start():
         # Sun Nov  6 08:49:37 1994
 """
 def request(method, URL, headers, body):
-    host, port, URI = parseURL(URL) #process URL
+    #process URL
+    host, port, URI = parseURL(URL) 
     
     #create and connect the socket to host
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -90,10 +91,10 @@ def request(method, URL, headers, body):
         bytesSend += sock.send(request[bytesSend:].encode(errors="strict"))
     
     response = sock.recv(8192)
-    #parseResponse(response)
-    print(response)
+    #print(response)
     
     sock.close()
+    return parseResponse(response.decode())
 
 def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
     if(re.match("^http://[a-zA-Z0-9.-]+:[0-9]+/?", URL)):
@@ -114,3 +115,20 @@ def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
     URI = "/" if(firstSlash == len(URL)) else URL[firstSlash:] 
     
     return host, port, URI
+
+def parseResponse(response):
+    endOfStatus = response.find("\r\n")
+    endOfHeaders = response.find("\r\n\r\n")
+    status = response[9:endOfStatus]
+    rawHeaders = response[endOfStatus+2:endOfHeaders]
+    body = response[endOfHeaders+4: ]
+    
+    rawHeaders = rawHeaders.split("\r\n")
+    
+    headers = [rawHeader.split(":") for rawHeader in rawHeaders]
+    
+    print("[Response] status:",status)
+    #print("body:", body)
+    
+    return status, headers, body
+parseURL("http://www.google.com:80/adwd/ad/awd/aw")
