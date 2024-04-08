@@ -68,22 +68,31 @@ def start():
         # Sun Nov  6 08:49:37 1994
 """
 def request(method, URL, headers, body):
-    host, port, URI = parseURL(URL)
+    host, port, URI = parseURL(URL) #process URL
+    
+    #create and connect the socket to host
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((host, int(port)))
     
+    #build the request
     request = f"{method} {URI} HTTP/1.1\r\nHost: {host + ":" + port}\r\n"
     
     for key, value in headers:
         request += f"{key}: {value}\r\n"
-    
     if len(headers) == 0:
-        request += "\r\n"    
+        request += "\r\n"
+            
     print(f"[Request] {request}")
     
-    print(sock.send(request.encode(errors="strict")))
+    #send the entire request
+    bytesSend = 0
+    while bytesSend < len(request):
+        bytesSend += sock.send(request[bytesSend:].encode(errors="strict"))
     
-    print(sock.recv(4096).decode())
+    response = sock.recv(8192)
+    #parseResponse(response)
+    print(response)
+    
     sock.close()
 
 def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
@@ -105,5 +114,3 @@ def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
     URI = "/" if(firstSlash == len(URL)) else URL[firstSlash:] 
     
     return host, port, URI
-
-parseURL("http://www.google.com:80/adwd/ad/awd/aw")

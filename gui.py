@@ -16,7 +16,7 @@ window.config(padx=20, pady=20)
 window.title("HTTP client")
 
 statusCode = StringVar()
-statusCode.set("Status code: 200")
+statusCode.set("Status: none")
 
 #request section
 methodMenu = CTkComboBox(window, values=httpClient.methods)
@@ -42,7 +42,7 @@ headersReqTable.pack(fill="both", expand=True)
 
 #response section
 
-responseLabel = CTkLabel(window, text="Response")
+responseLabel = CTkLabel(window, text="Response", anchor="w")
 statusCodeLabel = CTkLabel(window, text=statusCode.get())
 
 responseDataFields = CTkTabview(window, width=870, height=200, anchor="nw")
@@ -58,8 +58,8 @@ cookiesResFrame = CTkScrollableFrame(cookiesResTab, width=830, height=200)
 headersResTable = CTkTable(headersResFrame, column=2, row=10, values=[["Key", "Value"],[2,2],[3,3]])
 cookiesResTable = CTkTable(cookiesResFrame, column=7, row=10, values=[["Name", "Value", "Domain", "Path", "Expires", "HttpOnly", "Secure"],[2,2],[3,3]])
 
-responseLabel.grid(row=2, column=0, padx = (0, 50))
-statusCodeLabel.grid(row=2, column=2)
+responseLabel.grid(row=2, column=0)
+statusCodeLabel.grid(row=2, column=1, columnspan=2)
 
 responseDataFields.grid(row=3, column=0, columnspan=3)
 
