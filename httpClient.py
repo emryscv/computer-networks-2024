@@ -66,4 +66,3 @@ def start():
         # Sunday, 06-Nov-94 08:49:37 GMT
         # Sun Nov  6 08:49:37 1994
         
-start()
