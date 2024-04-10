@@ -16,12 +16,60 @@ responseHeaders = [["Key", "Value"]]
 
 statusCode.set("Status: none")
 
+headersSelectorDict = {}
+headersResSize = 0
+
+for header in httpClient.generalHeaders + httpClient.requestHeaders + httpClient.entityHeaders:
+    headersSelectorDict[header] = False
+
 #Handlers
+def addBtnHandler():
+    global headersResSize
+    if headersKeySelector.get() == "":
+        return
+    
+    #append to table
+    headersReqTable.add_row([headersKeySelector.get(), headerValues.get()], headersResSize+1)
+    
+    #delete option
+    headersSelectorDict[headersKeySelector.get()] = True
+    
+    values = [header for header in headersSelectorDict if headersSelectorDict[header] == False]
+    delValues = [header for header in headersSelectorDict if headersSelectorDict[header] == True]
+    #update options
+    headersKeySelector.configure(values=values)
+    headersKeySelector.set(values[0] if len(values) > 0 else "")
+    headersRemoverKeySelector.configure(values=delValues)
+    headersRemoverKeySelector.set(delValues[0])
+    
+    headersResSize += 1
+
+def removeBtnHandler():
+    if headersRemoverKeySelector.get() == "":
+        return
+    
+    headersSelectorDict[headersRemoverKeySelector.get()] = False
+    
+    for i, header in enumerate(headersReqTable.values):
+        if(header[0] == headersRemoverKeySelector.get()):
+            headersReqTable.delete_row(i)
+            break
+
+    values = [header for header in headersSelectorDict if headersSelectorDict[header] == False]
+    delValues = [header for header in headersSelectorDict if headersSelectorDict[header] == True]
+    #update options
+    headersKeySelector.configure(values=values)
+    headersKeySelector.set(values[0])
+    headersRemoverKeySelector.configure(values=delValues)
+    headersRemoverKeySelector.set(delValues[0] if len(delValues) > 0 else "")
+    
 def sendBtnHandler():
     global responseHeaders
     
-    status, headers, body = httpClient.request(methodMenu.get(), URL.get(), [], "")
+    status, headers, body = httpClient.request(methodMenu.get(), URL.get(), [], bodyReqFrame.get(0.0, "end"))
     responseHeaders = [["Key", "Value"]] + headers
+    
+    print(f"[body] {body}")
     
     statusCode.set("Status: " + status)
     
@@ -30,11 +78,9 @@ def sendBtnHandler():
     for header in responseHeaders:
         headersResTable.add_row(header, headersResTable.rows)
 
-    print(body)
-
     bodyResFrame.delete(0.0, 'end')
     bodyResFrame.insert(0.0, body)
-
+    
 #request section
 methodMenu = CTkComboBox(window, values=httpClient.methods)
 URL = CTkEntry(window, placeholder_text="URL", width=630, font=("",11))
@@ -46,7 +92,16 @@ headersReqTab = requestDataFields.add("Headers")
 bodyReqTab = requestDataFields.add("Body")
 headersReqFrame = CTkScrollableFrame(headersReqTab, width=830, height=190)
 bodyReqFrame = CTkTextbox(bodyReqTab, width=850, height=210)
-headersReqTable = CTkTable(headersReqFrame, column=2, values=[["Key", "Value"]])
+headersReqTable = CTkTable(headersReqFrame, column=2, values=[["Key", "Value"]], width=410)
+
+headersKeySelector = CTkOptionMenu(headersReqFrame, values=[header for header in headersSelectorDict if headersSelectorDict[header] == False])
+headerValues = CTkEntry(headersReqFrame, width=550)
+addHeaderBtn = CTkButton(headersReqFrame, text="ADD", command=addBtnHandler)
+
+headersRemoverKeySelector = CTkOptionMenu(headersReqFrame, values=[header for header in headersSelectorDict if headersSelectorDict[header] == True])
+removeHeaderBtn = CTkButton(headersReqFrame, text="Remove", command=removeBtnHandler)
+
+headersRemoverKeySelector.set("")
 
 methodMenu.grid(row=0, column=0)
 URL.grid(row=0, column=1)
@@ -55,7 +110,14 @@ requestDataFields.grid(row=1, column=0, columnspan=3)
 
 headersReqFrame.pack(fill="both", expand=True)
 bodyReqFrame.pack(fill="both", expand=True)
-headersReqTable.pack(fill="both", expand=True)
+headersReqTable.grid(row=0,column=0,columnspan=3,pady=(0,10))
+
+headersKeySelector.grid(row=1,column=0)
+headerValues.grid(row=1,column=1)
+addHeaderBtn.grid(row=1,column=2)
+
+headersRemoverKeySelector.grid(row=2,column=0, pady=10)
+removeHeaderBtn.grid(row=2,column=2, pady=10)
 
 #response section
 
@@ -88,4 +150,3 @@ headersResTable.pack(fill="both", expand=True)
 cookiesResTable.pack(fill="both", expand=True)
 
 window.mainloop()
-

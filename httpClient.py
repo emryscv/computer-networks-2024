@@ -1,78 +1,23 @@
 import socket
 from bs4 import BeautifulSoup as bs
 import re
+from http import cookies
+
+#(TODO) anadir 100 status handler
 
 methods = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT"]
 
 generalHeaders = ["Cache-Control", "Connection", "Date", "Pragma", "Trailer", "Transfer-Enconding", "Upgrade", "Via", "Warning"]
 requestHeaders = ["Accept","Accept-Charset","Accept-Encoding","Accept-Language", "Authorization", "Expect", "From", "Host", "If-Match", "If-Modified-Since", "If-None-Match", "If-Range", "If-Unmodified-Since", "Max-Forwards", "Proxy-Authorization","Range", "Referer", "TE", "User-Agent" ]
 entityHeaders = ["Allow", "Content-Encoding", "Content-Language","Content-Length", "Content-Location", "Content-MD5", "Content-Range", "Content-Type", "Expires", "Last-Modified"]
-"""
-def start():
-    while True:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        os.system("cls")
-        print("Pick a method: ")
 
-        i = 1
-        for method in methods:
-            print(i, "-", method)
-            i+=1    
-            
-        option = int(input("Enter the Method: "))
-        
-        if option < 1 or option > 8:
-            print(f"Not a valid option: {option}")
-            input("Enter to continue")
-            continue
-        
-        method = methods[option]
-
-        address = input("Enter the address: ")
-
-        #address parsing
-        firstSlash = len(address) if (address.find("/") == -1) else address.find("/")
-        firstColon = firstSlash if (address.find(":") == -1) else address.find(":")
-
-        host = address[:firstColon]
-        port = "80" if(firstColon ==  firstSlash) else address[firstColon + 1:firstSlash]
-        URI = "/" if(firstSlash == len(address)) else address[firstSlash:] 
-
-        print("host:", host, " port:", port, " URI:", URI)
-
-#        try:
-        sock.connect((host, int(port)))
-#        except:
-#            print("\n\nCould not connect to server :-(.\nPlease verify the URL and the internet.\nThen connection and try again.")
-            
-#            input("Enter to continue")
-#            continue
-        
-        request = f"{method} {URI} HTTP/1.1\r\nHost: {host + ":" + port}\r\nConnection: close\r\n"
-        print(sock.send(request.encode(errors="strict")))
-        
-        # response = b''
-        # while True:
-        #     buf = sock.recv(4096) 
-        #     if not buf:
-        #         break
-        #     response += buf
-            
-        print(sock.recv(4096).decode())
-        sock.close()
-
-        input("Enter to continue")
-        # Sun, 06 Nov 1994 08:49:37 GMT debo devolver esta fecha
-        # pero debo aceptar tambien
-        # Sunday, 06-Nov-94 08:49:37 GMT
-        # Sun Nov  6 08:49:37 1994
-"""
 def request(method, URL, headers, body):
     #process URL
     host, port, URI = parseURL(URL) 
     
     #create and connect the socket to host
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(20)
     sock.connect((host, int(port)))
     
     #build the request
@@ -90,11 +35,17 @@ def request(method, URL, headers, body):
     while bytesSend < len(request):
         bytesSend += sock.send(request[bytesSend:].encode(errors="strict"))
     
-    response = sock.recv(8192)
-    #print(response.decode())
+    status, respHeaders, body, headersDict = "error", [], "", {}
+    
+    
+    status, respHeaders, body, headersDict = receiveResponse(sock)
+    #except:
+     #   print("[error] check the url, or the intenet conection")
+    
+    #print(response)
     
     sock.close()
-    return parseResponse(response.decode())
+    return status, respHeaders, body
 
 def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
     if(re.match("^http://[a-zA-Z0-9.-]+:[0-9]+/?", URL)):
@@ -115,6 +66,79 @@ def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
     URI = "/" if(firstSlash == len(URL)) else URL[firstSlash:] 
     
     return host, port, URI
+
+def receiveResponse(sock):
+    
+    headers = ""
+    body = ""
+    
+    #receive the headers section of the response
+    while True:
+        buff = sock.recv(1)
+        if not buff:
+            break
+        if headers.endswith('\r\n\r\n'):
+            break
+        headers += buff.decode()
+        
+    #get status code and reason phrase
+    endOfStatus = headers.find("\r\n")
+    status = headers[9:endOfStatus]
+
+    #process headers
+    headers = headers[endOfStatus+2:-4].split("\r\n")
+    headersDic = {}
+    
+    for header in headers:
+        key, value = header.split(": ", 1)
+        key = key.lower()
+        # if key == "Set-Cookie":  
+        headersDic[key] = value
+
+    headers = [header.split(": ", 1) for header in headers]
+    print(headers)
+    #case when no enconded
+    if 'content-length' in headersDic:
+        remaining = int(headersDic['content-length']) - len(body)
+        
+        while remaining > 0:
+            print(remaining)
+            data = sock.recv(min(remaining, 1024))
+            if not data:
+                break
+            body += data.decode("ISO-8859-1")
+            remaining -= len(data)
+            
+            print(len(data))
+            
+    else:
+        try:
+            body = ""
+            while True:
+                buff = sock.recv(1024)
+                print(buff)
+                if not buff:
+                    break
+                body += buff.decode("ISO-8859-1")
+                
+        except TimeoutError:
+            print("TimeOut!")
+                
+    #print(headersDic)
+    
+    return status, headers, body, headersDic
+
+"""
+def parseCookie(cookieString):
+    print(cookieString)
+    splitedCookie = cookieString.split(";")
+    cookie = []
+    cookie += [splitedCookie[0].split("=")[0], splitedCookie[0].split("=")[0]]
+    for parameter in splitedCookie:
+        cookie += [parameter.split("=")[1]]
+        
+    print(cookie)
+"""
 
 def parseResponse(response):
     endOfStatus = response.find("\r\n")
