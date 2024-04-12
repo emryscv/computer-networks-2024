@@ -38,13 +38,23 @@ def request(method, URL, headers, body):
     status, respHeaders, body, headersDict = "error", [], "", {}
     
     
-    status, respHeaders, body, headersDict = receiveResponse(sock)
+    status, respHeaders, body, headersDict = receiveHeadersResponse(sock)
+    
     #except:
      #   print("[error] check the url, or the intenet conection")
     
     #print(response)
     
     sock.close()
+    
+    if (status.startswith("300") or status.startswith("305")) and "location" in headersDict:
+        status, respHeaders, body = request(method, headersDict["location"], headers, body)
+    elif (status.startswith("301") or status.startswith("302") or status.startswith("307")) and "location" in headersDict and (method == "GET" or method == "HEAD"):
+        status, respHeaders, body = request(method, headersDict["location"], headers, body)
+    elif status.startswith("303") and "location" in headersDict:
+        status, respHeaders, body = request("GET", headersDict["location"], headers, body)
+    
+        
     return status, respHeaders, body
 
 def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
@@ -67,7 +77,7 @@ def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
     
     return host, port, URI
 
-def receiveResponse(sock):
+def receiveHeadersResponse(sock):
     
     headers = ""
     body = ""
@@ -127,6 +137,7 @@ def receiveResponse(sock):
     #print(headersDic)
     
     return status, headers, body, headersDic
+
 
 """
 def parseCookie(cookieString):
