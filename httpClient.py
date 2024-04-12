@@ -1,7 +1,7 @@
 import socket
 from bs4 import BeautifulSoup as bs
 import re
-from http import cookies
+import ssl
 
 #(TODO) anadir 100 status handler
 
@@ -13,11 +13,19 @@ entityHeaders = ["Allow", "Content-Encoding", "Content-Language","Content-Length
 
 def request(method, URL, headers, body):
     #process URL
-    host, port, URI = parseURL(URL) 
+    print(parseURL(URL))
+    host, port, URI, https = parseURL(URL) 
+    print(host, port, URI, https)
     
     #create and connect the socket to host
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.settimeout(20)
+    
+    if https:
+        context = ssl.create_default_context()
+        sock = context.wrap_socket(sock, server_hostname=host)
+        port = "443"
+                
     sock.connect((host, int(port)))
     
     #build the request
@@ -58,15 +66,16 @@ def request(method, URL, headers, body):
     return status, respHeaders, body
 
 def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
-    if(re.match("^http://[a-zA-Z0-9.-]+:[0-9]+/?", URL)):
+    https = URL.startswith("https")
+    if(re.match("^https?://[a-zA-Z0-9.-]+:[0-9]+/?", URL)):
         host, port = URL.split("/", 3)[2].split(":")
         URI = URL.split("/", 3)[3]
-        return host, port, URI
-    if(re.match("^http://[a-zA-Z0-9.-]+/?", URL)):
+        return host, port, URI, https
+    if(re.match("^https?://[a-zA-Z0-9.-]+/?", URL)):
         host = URL.split("/", 3)[2]
         port = "80"
         URI = URL.split("/", 3)[3] if len(URL.split("/", 3)) == 4 else "/"
-        return host, port, URI
+        return host, port, URI, https
     
     firstSlash = len(URL) if (URL.find("/") == -1) else URL.find("/")
     firstColon = firstSlash if (URL.find(":") == -1) else URL.find(":")
@@ -75,7 +84,7 @@ def parseURL(URL): #(TODO) ver si se peude parsear con urllib.parse
     port = "80" if(firstColon ==  firstSlash) else URL[firstColon + 1:firstSlash]
     URI = "/" if(firstSlash == len(URL)) else URL[firstSlash:] 
     
-    return host, port, URI
+    return host, port, URI, https
 
 def receiveHeadersResponse(sock):
     
@@ -109,7 +118,7 @@ def receiveHeadersResponse(sock):
     print(headers)
     #case when no enconded
     if 'content-length' in headersDic:
-        remaining = int(headersDic['content-length']) - len(body)
+        remaining = int(headersDic['content-length']) - len(body) - 1
         
         while remaining > 0:
             print(remaining)
